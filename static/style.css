@@ -1,0 +1,269 @@
+/* -------------------------------------------------------------------------
+   Supabase backup dashboard — Apple-inspired styling.
+   Hand-written, no framework. Calm surfaces, generous whitespace, large
+   rounded corners, soft shadows, and the system (SF Pro) font stack.
+   ------------------------------------------------------------------------- */
+
+:root {
+  --bg: #f5f5f7;              /* the signature light-gray backdrop */
+  --surface: #ffffff;
+  --text: #1d1d1f;           /* near-black, softer than pure #000 */
+  --text-muted: #6e6e73;
+  --accent: #0071e3;         /* Apple blue */
+  --accent-hover: #0077ed;
+  --ok: #34c759;             /* green */
+  --fail: #ff3b30;           /* red */
+  --border: #e5e5ea;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.10);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+}
+
+/* ---- Top bar ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.topbar-title {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.topbar-subtitle {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+.topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ---- Cards ---- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stat-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.stat-value--muted { color: var(--text-muted); font-weight: 500; font-size: 17px; }
+
+/* ---- Section titles ---- */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+/* ---- Table ---- */
+.table-card { padding: 24px; }
+.table-scroll { overflow-x: auto; }
+.runs {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.runs th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.runs td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.runs tr:last-child td { border-bottom: none; }
+.nowrap { white-space: nowrap; }
+.mono, .runs td.mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+}
+.details { max-width: 320px; }
+.error-text {
+  color: var(--fail);
+  display: inline-block;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.muted { color: var(--text-muted); }
+.empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 32px 0;
+}
+
+/* ---- Status pills ---- */
+.pill {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pill--ok { background: rgba(52, 199, 89, 0.14); color: #248a3d; }
+.pill--fail { background: rgba(255, 59, 48, 0.14); color: #c9241b; }
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-block;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+}
+.btn:active { transform: scale(0.98); }
+.btn--primary { background: var(--accent); color: #fff; }
+.btn--primary:hover { background: var(--accent-hover); }
+.btn--ghost {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--border);
+}
+.btn--ghost:hover { background: rgba(0, 0, 0, 0.03); }
+.btn--full { width: 100%; }
+
+/* ---- Links ---- */
+.link { color: var(--accent); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+/* ---- Footnote ---- */
+.footnote {
+  margin-top: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ---- Login ---- */
+.login-wrap {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  padding: 40px 32px;
+  text-align: center;
+}
+.login-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.login-subtitle {
+  color: var(--text-muted);
+  margin: 0 0 28px;
+  font-size: 15px;
+}
+.login-form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.input {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  background: #fbfbfd;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+  background: #fff;
+}
+
+/* ---- Toasts ---- */
+.toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50;
+}
+.toast {
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hover);
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--surface);
+  border-left: 4px solid var(--accent);
+  max-width: 320px;
+}
+.toast--success { border-left-color: var(--ok); }
+.toast--error { border-left-color: var(--fail); }
+
+/* ---- Responsive ---- */
+@media (max-width: 820px) {
+  .cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .page { padding: 24px 16px 48px; }
+  .cards { grid-template-columns: 1fr; }
+  .topbar-actions { width: 100%; }
+}

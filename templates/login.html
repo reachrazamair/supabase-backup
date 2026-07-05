@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Supabase Backups{% endblock %}
+
+{% block content %}
+<div class="login-wrap">
+  <div class="card login-card">
+    <h1 class="login-title">Backups</h1>
+    <p class="login-subtitle">Sign in to view your backup dashboard.</p>
+
+    <form method="post" action="{{ url_for('login') }}" class="login-form">
+      <label class="field">
+        <span class="field-label">Username</span>
+        <input class="input" type="text" name="username" autocomplete="username" required autofocus>
+      </label>
+      <label class="field">
+        <span class="field-label">Password</span>
+        <input class="input" type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn btn--primary btn--full" type="submit">Sign in</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

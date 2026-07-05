@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Supabase Backups{% endblock %}
+
+{% block content %}
+<header class="topbar">
+  <div>
+    <h1 class="topbar-title">Backup Dashboard</h1>
+    <p class="topbar-subtitle">Supabase &rarr; Azure Blob Storage</p>
+  </div>
+  <div class="topbar-actions">
+    <form method="post" action="{{ url_for('run_backup') }}">
+      <button class="btn btn--primary" type="submit">Run backup now</button>
+    </form>
+    <a class="btn btn--ghost" href="{{ url_for('dashboard') }}">Refresh</a>
+    <a class="btn btn--ghost" href="{{ url_for('logout') }}">Log out</a>
+  </div>
+</header>
+
+{# ---- Summary cards ---- #}
+<section class="cards">
+  <div class="card stat">
+    <span class="stat-label">Last backup</span>
+    {% if summary.last_status == 'success' %}
+      <span class="stat-value"><span class="pill pill--ok">Success</span></span>
+    {% elif summary.last_status == 'fail' %}
+      <span class="stat-value"><span class="pill pill--fail">Failed</span></span>
+    {% else %}
+      <span class="stat-value stat-value--muted">No runs yet</span>
+    {% endif %}
+  </div>
+
+  <div class="card stat">
+    <span class="stat-label">Last run time</span>
+    <span class="stat-value">{{ summary.last_timestamp | pretty_time }}</span>
+  </div>
+
+  <div class="card stat">
+    <span class="stat-label">Total backups</span>
+    <span class="stat-value">{{ summary.total_runs }}</span>
+  </div>
+
+  <div class="card stat">
+    <span class="stat-label">Total stored size</span>
+    <span class="stat-value">{{ summary.total_size_bytes | human_size }}</span>
+  </div>
+</section>
+
+{# ---- Runs table ---- #}
+<section class="card table-card">
+  <h2 class="section-title">Recent runs</h2>
+  {% if rows %}
+  <div class="table-scroll">
+    <table class="runs">
+      <thead>
+        <tr>
+          <th>Date (UTC)</th>
+          <th>Status</th>
+          <th>File</th>
+          <th>Size</th>
+          <th>Duration</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set run = row.run %}
+        <tr>
+          <td class="nowrap">{{ run.timestamp | pretty_time }}</td>
+          <td>
+            {% if run.status == 'success' %}
+              <span class="pill pill--ok">Success</span>
+            {% else %}
+              <span class="pill pill--fail">Failed</span>
+            {% endif %}
+          </td>
+          <td class="mono">
+            {% if run.file_name %}
+              {% if row.download_url %}
+                <a class="link" href="{{ row.download_url }}">{{ run.file_name }}</a>
+              {% else %}
+                {{ run.file_name }}
+              {% endif %}
+            {% else %}—{% endif %}
+          </td>
+          <td>{{ run.file_size_bytes | human_size }}</td>
+          <td>{{ run.duration_seconds | human_duration }}</td>
+          <td class="details">
+            {% if run.status == 'success' %}
+              {% if row.download_url %}
+                <a class="link" href="{{ row.download_url }}">Download</a>
+              {% else %}
+                <span class="muted">Stored remotely</span>
+              {% endif %}
+            {% else %}
+              <span class="error-text" title="{{ run.error_message }}">{{ run.error_message }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p class="empty">No backups have run yet. Click “Run backup now” to create one.</p>
+  {% endif %}
+</section>
+
+<p class="footnote">Download links are valid for 15 minutes. This page auto-refreshes every 30 seconds.</p>
+
+{# Lightweight auto-refresh — no framework, just reloads the page. #}
+<script>
+  setTimeout(function () { window.location.reload(); }, 30000);
+</script>
+{% endblock %}
