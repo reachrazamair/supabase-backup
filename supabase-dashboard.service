@@ -1,0 +1,30 @@
+# systemd unit for the Supabase backup dashboard.
+#
+# This keeps the Flask dashboard (served by gunicorn) running and restarts it on
+# crash or reboot. Adjust User, WorkingDirectory, and the venv path to match
+# your server, then install it (see README.md "Deploy the dashboard"):
+#
+#   sudo cp supabase-dashboard.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now supabase-dashboard
+#
+# Check it with:  systemctl status supabase-dashboard
+
+[Unit]
+Description=Supabase Backup Dashboard (Flask/gunicorn)
+After=network.target
+
+[Service]
+# Run as a non-root user that owns the project directory.
+User=ubuntu
+WorkingDirectory=/opt/supabase-backup
+
+# gunicorn serves the Flask "app" object from app.py, bound to localhost.
+# Put nginx (or another reverse proxy) in front of it for TLS/public access.
+ExecStart=/opt/supabase-backup/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 app:app
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+# Python dependencies for the Supabase backup tool + dashboard.
+# Install with:  pip install -r requirements.txt
+
+python-dotenv==1.0.1        # loads the .env file
+azure-storage-blob==12.22.0 # upload/list/delete blobs + sign download URLs
+Flask==3.0.3               # the dashboard web app (app.py)
+gunicorn==22.0.0           # production WSGI server for the dashboard (systemd)
+
+# Note: SQLite (backup history) and smtplib (email alerts) are part of the
+# Python standard library, so they need no packages here.
