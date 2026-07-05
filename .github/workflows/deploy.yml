@@ -1,0 +1,30 @@
+name: Deploy to Azure VM
+
+# Runs on every push to main: pulls the latest code onto the VM,
+# installs any new dependencies, and restarts the dashboard service.
+# backup.py needs no restart — cron always runs whatever is on disk.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {} # allows manually re-running from the Actions tab
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          port: ${{ secrets.VM_PORT || 22 }}
+          script: |
+            set -e
+            cd /home/brideministries/supabase-backups
+            git fetch origin main
+            git reset --hard origin/main
+            source venv/bin/activate
+            pip install -r requirements.txt --quiet
+            sudo systemctl restart supabase-dashboard
+            echo "Deploy finished: $(git rev-parse --short HEAD)"

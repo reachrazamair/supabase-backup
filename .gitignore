@@ -18,3 +18,6 @@ __pycache__/
 # Process output logs (dashboard / cron runtime output).
 dashboard.out
 cron.out
+
+# Local editor/agent settings.
+.claude/
