@@ -88,10 +88,18 @@ def pretty_time(iso_timestamp):
         return iso_timestamp
 
 
+def backup_type_label(backup_type):
+    """Human label for a run's backup type: 'Storage' vs 'Database'."""
+    if backup_type == db.TYPE_STORAGE:
+        return "Storage"
+    return "Database"
+
+
 # Make the helpers available inside Jinja templates as filters.
 app.jinja_env.filters["human_size"] = human_size
 app.jinja_env.filters["human_duration"] = human_duration
 app.jinja_env.filters["pretty_time"] = pretty_time
+app.jinja_env.filters["backup_type_label"] = backup_type_label
 
 
 # --------------------------------------------------------------------------- #

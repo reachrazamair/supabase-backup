@@ -158,6 +158,18 @@ html, body {
 .pill--ok { background: rgba(52, 199, 89, 0.14); color: #248a3d; }
 .pill--fail { background: rgba(255, 59, 48, 0.14); color: #c9241b; }
 
+/* ---- Backup-type badges (Database vs Storage) ---- */
+.type-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.type-badge--database { background: rgba(0, 113, 227, 0.12); color: #0058b0; }
+.type-badge--storage { background: rgba(142, 68, 173, 0.14); color: #7a3ea0; }
+
 /* ---- Buttons ---- */
 .btn {
   display: inline-block;

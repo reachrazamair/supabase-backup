@@ -17,7 +17,6 @@ All configuration and secrets live in the .env file (see .env.example). Nothing
 sensitive is hardcoded. Designed to be run from cron on a Linux VPS.
 """
 
-import fcntl
 import gzip
 import os
 import shutil
@@ -279,8 +278,22 @@ def acquire_lock():
     lock; the OS releases it automatically when the handle is closed or the
     process exits). Returns None if another run already holds the lock, so the
     caller can exit cleanly instead of starting a second pg_dump. See M1 fix.
+
+    `fcntl` is Unix-only, so it's imported here (not at module load) — that keeps
+    the script importable on platforms without it (e.g. Windows). Where it's
+    missing we can't lock, so we warn and proceed WITHOUT overlap protection. On
+    Linux (the VM) locking works exactly as before.
     """
     handle = open(LOCK_FILE, "w")
+    try:
+        import fcntl
+    except ImportError:
+        print(
+            "WARNING: file locking is unavailable on this platform; running "
+            "the backup without overlap protection.",
+            file=sys.stderr,
+        )
+        return handle
     try:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:

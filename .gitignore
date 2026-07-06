@@ -1,11 +1,13 @@
-# Secrets — never commit the real environment file.
+# Secrets — never commit the real environment file or any copy of it.
 .env
+.env.*
 
-# Backup artifacts, run log, history database, and run lock.
+# Backup artifacts, run log, history database, and run locks.
 *.sql.gz
+*.tar.gz
 backups.log
 backups.db
-backup.lock
+*.lock
 
 # Python virtual environment.
 venv/

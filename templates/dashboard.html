@@ -55,6 +55,7 @@
         <tr>
           <th>Date (UTC)</th>
           <th>Status</th>
+          <th>Type</th>
           <th>File</th>
           <th>Size</th>
           <th>Duration</th>
@@ -72,6 +73,11 @@
             {% else %}
               <span class="pill pill--fail">Failed</span>
             {% endif %}
+          </td>
+          <td>
+            <span class="type-badge type-badge--{{ run.backup_type }}">
+              {{ run.backup_type | backup_type_label }}
+            </span>
           </td>
           <td class="mono">
             {% if run.file_name %}

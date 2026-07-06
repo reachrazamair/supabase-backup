@@ -5,7 +5,9 @@ backup to Azure Blob Storage, prunes old backups, records every run, and reports
 failures by email. It also ships a clean web dashboard to view history and
 trigger backups on demand.
 
-- **`backup.py`** — the nightly backup job (run from cron).
+- **`backup.py`** — the nightly database backup job (run from cron).
+- **`storage_backup.py`** — a separate job that backs up Supabase Storage
+  buckets (uploaded files). Run manually; see "Storage bucket backups" below.
 - **`app.py`** — the Flask dashboard (kept running by systemd).
 
 ## What a backup run does
@@ -30,7 +32,8 @@ All secrets live in `.env` only. Nothing is hardcoded.
 
 | File / folder            | Purpose                                                        |
 |--------------------------|----------------------------------------------------------------|
-| `backup.py`              | The backup job.                                                |
+| `backup.py`              | The Postgres database backup job.                              |
+| `storage_backup.py`      | The Supabase Storage (uploaded files) backup job.              |
 | `app.py`                 | The Flask dashboard.                                           |
 | `config.py`              | Loads `.env`; `require_env()` fails loud on missing vars.      |
 | `db.py`                  | SQLite history: `init_db` / `insert_run` / `list_runs`.        |
@@ -80,7 +83,10 @@ Fill in these variables (grouped as in `.env.example`):
 |---|---|---|
 | `DATABASE_URL` | yes | Supabase URI: Project Settings → Database → Connection string → URI. |
 | `AZURE_STORAGE_CONNECTION_STRING` | yes | Azure → Storage account → Access keys → Connection string. |
-| `AZURE_CONTAINER_NAME` | yes | Container name (lowercase). Created if missing. |
+| `AZURE_CONTAINER_NAME` | yes | Container name (lowercase). Created if missing. Storage backups use the same container. |
+| `SUPABASE_URL` | for storage backup | Project URL, e.g. `https://xxxx.supabase.co`. Settings → API → Project URL. |
+| `SUPABASE_SERVICE_ROLE_KEY` | for storage backup | **service_role** key (not anon). Settings → API → Project API keys. Keep secret. |
+| `BACKUP_BUCKETS` | no | Comma-separated bucket names to back up. Blank = all buckets. |
 | `SMTP_HOST` / `SMTP_PORT` | for email | Mail server host and port (587 STARTTLS or 465 SSL). |
 | `SMTP_USER` / `SMTP_PASSWORD` | for email | SMTP credentials (optional if your relay allows unauthenticated send). |
 | `ALERT_FROM` / `ALERT_TO` | for email | From address and recipient(s); `ALERT_TO` may be comma-separated. |
@@ -124,7 +130,62 @@ python app.py
 ```
 
 The dashboard shows summary cards, a table of recent runs, per-row download
-links (short-lived Azure SAS URLs), and a "Run backup now" button.
+links (short-lived Azure SAS URLs), and a "Run backup now" button. The runs
+table has a **Type** column so you can tell Database backups from Storage
+backups at a glance.
+
+---
+
+## Storage bucket backups (uploaded files)
+
+`storage_backup.py` is a **separate** job from `backup.py`. `backup.py` dumps the
+Postgres *database*; `storage_backup.py` backs up the *files* your users have
+uploaded to Supabase **Storage buckets**. It is **strictly read-only** on
+Supabase — it only lists and downloads, and never deletes, overwrites, or
+changes anything in your buckets.
+
+What a run does:
+
+1. Connects to Supabase with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+2. Backs up every bucket, or just the ones named in `BACKUP_BUCKETS`.
+3. Downloads all files (paging through large buckets, recursing into folders,
+   and skipping + logging any single file that fails) into a temp directory,
+   preserving `bucket/folder/file` structure.
+4. Packs them into one archive: `storage-backup-YYYY-MM-DD-HHMM.tar.gz`.
+5. Uploads that archive to the **same** Azure container as the DB backups, then
+   prunes only old `storage-backup-*.tar.gz` blobs (never the DB backups).
+6. Records the run in the shared history (`backups.db` / `backups.log`) tagged
+   as **storage**, and cleans up the temp dir + local archive (respecting
+   `BACKUP_KEEP_LOCAL`).
+
+> **You need the service-role key.** Only the `service_role` key can read every
+> bucket (including private ones). Get it from Supabase → Project Settings →
+> API → Project API keys → `service_role`. Treat it like a password — it grants
+> full access to your project. It lives only in `.env`.
+
+### Run it manually
+
+Preview first with `--dry-run` — it connects, lists buckets, and prints how many
+files (and what size) it *would* back up, but downloads nothing, uploads
+nothing, and writes no history. It doesn't even need the Azure config:
+
+```bash
+source venv/bin/activate
+python storage_backup.py --dry-run
+```
+
+Then do a real run:
+
+```bash
+python storage_backup.py
+```
+
+Expected on success: a new `storage-backup-*.tar.gz` locally and in Azure, a
+`SUCCESS` row in `backups.log` / `backups.db` (type `storage`), and exit code
+`0`. A failed run emails an alert (same `notify.py` as the DB backup) and, if
+`NOTIFY_ON_SUCCESS=true`, a successful run emails an "OK" note too. It is **not** wired into the nightly cron yet — run and verify it on its
+own first. Once you're happy, you can add it to `crontab` just like `backup.py`
+(e.g. a second nightly line calling `python storage_backup.py`).
 
 ---
 

@@ -3,6 +3,7 @@
 
 python-dotenv==1.0.1        # loads the .env file
 azure-storage-blob==12.22.0 # upload/list/delete blobs + sign download URLs
+supabase==2.15.0           # lists/downloads Supabase Storage buckets (storage_backup.py)
 Flask==3.0.3               # the dashboard web app (app.py)
 gunicorn==22.0.0           # production WSGI server for the dashboard (systemd)
 

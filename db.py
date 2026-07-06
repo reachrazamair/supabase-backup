@@ -29,6 +29,12 @@ DB_PATH = SCRIPT_DIR / "backups.db"
 STATUS_SUCCESS = "success"
 STATUS_FAIL = "fail"
 
+# Allowed backup-type values, so the dashboard can tell the nightly database
+# dump apart from a Supabase Storage (uploaded files) backup. Rows created
+# before this column existed are treated as "database".
+TYPE_DATABASE = "database"
+TYPE_STORAGE = "storage"
+
 
 @dataclass
 class BackupRun:
@@ -40,6 +46,7 @@ class BackupRun:
     file_size_bytes: Optional[int] = None
     duration_seconds: Optional[float] = None
     error_message: Optional[str] = None
+    backup_type: str = TYPE_DATABASE
     id: Optional[int] = None
 
 
@@ -73,6 +80,22 @@ def _connect():
         conn.close()
 
 
+def _ensure_backup_type_column(conn) -> None:
+    """
+    Add the `backup_type` column to older databases that predate it.
+
+    SQLite has no "ADD COLUMN IF NOT EXISTS", so we look at the existing columns
+    first and only add it when missing. Existing rows default to 'database' (the
+    only kind of backup there was before this column), so old history stays
+    correct. Cheap no-op once the column exists.
+    """
+    columns = [row["name"] for row in conn.execute("PRAGMA table_info(runs)")]
+    if "backup_type" not in columns:
+        conn.execute(
+            "ALTER TABLE runs ADD COLUMN backup_type TEXT NOT NULL DEFAULT 'database'"
+        )
+
+
 def init_db() -> None:
     """Create the `runs` table if it does not already exist (idempotent)."""
     with _connect() as conn:
@@ -85,10 +108,13 @@ def init_db() -> None:
                 file_name        TEXT,
                 file_size_bytes  INTEGER,
                 duration_seconds REAL,
-                error_message    TEXT
+                error_message    TEXT,
+                backup_type      TEXT    NOT NULL DEFAULT 'database'
             )
             """
         )
+        # Bring pre-existing databases (created before this column) up to date.
+        _ensure_backup_type_column(conn)
 
 
 def insert_run(run: BackupRun) -> int:
@@ -99,8 +125,8 @@ def insert_run(run: BackupRun) -> int:
             """
             INSERT INTO runs
                 (timestamp, status, file_name, file_size_bytes,
-                 duration_seconds, error_message)
-            VALUES (?, ?, ?, ?, ?, ?)
+                 duration_seconds, error_message, backup_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 run.timestamp,
@@ -109,6 +135,7 @@ def insert_run(run: BackupRun) -> int:
                 run.file_size_bytes,
                 run.duration_seconds,
                 run.error_message,
+                run.backup_type,
             ),
         )
         return int(cursor.lastrowid)
@@ -131,6 +158,7 @@ def list_runs(limit: int = 100) -> List[BackupRun]:
             file_size_bytes=row["file_size_bytes"],
             duration_seconds=row["duration_seconds"],
             error_message=row["error_message"],
+            backup_type=row["backup_type"],
         )
         for row in rows
     ]
